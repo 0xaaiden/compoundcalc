@@ -95,7 +95,6 @@
     </div>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/fetch/2.0.2/fetch.min.js" async></script>
     <script type="text/javascript" src="./assets/js/gradient.js" async></script>
-    <script type="text/javascript" src="./assets/js/download.js" async></script>
     <script>
         window.onload = function() {
             getLiqPrice();
@@ -111,19 +110,20 @@
             for (var i in e) el.addEventListener(e[i], resize, false);
             resize();
         }
-        resizable(document.getElementById('input-text'), 11);
+        resizable(document.getElementById('input-text'), 12);
 
-        function resizable(el, factor) {
+        function resizable2(el, factor) {
             var int = Number(factor) || 7.7;
 
             function resize() {
-                el.style.width = ((el.value.length + 5) * int) + 'px'
+                el.style.width = ((el.value.length + 5
+                                  ) * int) + 'px'
             }
             var e = 'keyup,keypress,focus,blur,change'.split(',');
             for (var i in e) el.addEventListener(e[i], resize, false);
             resize();
         }
-        resizable(document.getElementById('input-text2'), 7);
+        resizable2(document.getElementById('input-text2'), 10);
 
 
 
@@ -184,7 +184,7 @@
             var supplyq = document.getElementById('input-text2')
             var sq = 0;
             if (supplyq.value != "") {
-                sq = parseInt(supplyq.value);
+                sq = parseFloat(supplyq.value);
             }
             return sq;
         }
@@ -193,7 +193,7 @@
             var borrowq = document.getElementById('input-text')
             var bq = 0;
             if (borrowq.value != "") {
-                bq = parseInt(borrowq.value);
+                bq = parseFloat(borrowq.value);
             }
             return bq;
         }
