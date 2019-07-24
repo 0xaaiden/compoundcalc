@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <meta name="theme-color" content="#000000">
+    <!-- Standard -->
+    <title>Compound Calculator</title>
+    <meta name="author" content="Aziz Jalel">
+    <link rel="icon" type="image/x-icon" href="assets/img/favicon.ico" />
+    <!-- Schema.org -->
+    <meta itemprop="name" content="Compound">
+    <meta itemprop="description" content="Simple cryptocurrency price & portfolio monitor">
+    <meta itemprop="url" content="https://compound.finance">
+    <meta itemprop="sourceOrganization" content="Compound">
+    <meta itemprop="inLanguage" content="en-US">
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:site" content="@compoundfinance">
+    <!-- OpenGraph -->
+    <meta property="og:title" content="Compound">
+    <meta property="og:site_name" content="Compound">
+    <meta property="og:url" content="http://compound.finance">
+    <meta property="og:description" content="Simple cryptocurrency price & portfolio monitor">
+    <meta property="og:type" content="website">
+    <meta property="og:locale" content="en_US">
+</head>
+<link rel="stylesheet" href="styles.css">
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+
+<body>
+    <div class="content__wrapper">
+        <section class="intro__wrapper">
+            <div class="intro">
+                <h1>Compound Calc <span class="intro__text__symbol"></span></h1>
+                <p>It’s a simple tool to calculate the liquidation price for assets serving as collateral on Compound.</p>
+                <div class="intro__actions">
+                    <!-- <a href="https://itunes.apple.com/us/app/lionshare-cryptocurrency-price-ticker/id1223558570?ls=1&mt=8" class="intro__actions__button">for iOS</a>
+                    <a href id="download" class="intro__actions__button">for macOS</a>-->
+                    <div class="intro__actions__links">
+                        <a href="https://twitter.com/compoundfinance?lang=en" class="actions__link">Twitter</a>
+                        <span class="actions__divider">|</span>
+                        <a href="https://compound.finance" class="actions__link">Compound</a>
+                    </div>
+                </div>
+            </div>
+        </section>
+        <section class="demo__wrapper">
+            <div class="demo">
+                <!-- <img src="assets/img/demo-2@2x.png" class="demo__img demo__img--2">
+        <img src="assets/img/demo-1@2x.png" class="demo__img demo__img--1"> -->
+                <div class="demo__img demo__img--2 center_text">
+                    <center>I want to borrow<br />
+
+                        <input value="1000" id="input-text" type="text" class="form-control__input" oninput="getLiqPrice()">
+
+
+                        <select id="blue" onchange="getLiqPrice()">
+                            <optgroup label="Tokens">
+                                <option value="eth">ETH</option>
+                                <option value="dai">DAI</option>
+                                <option value="usdc" selected="selected">USDC</option>
+                                <option value="bat">BAT</option>
+                                <option value="rep">REP</option>
+                                <option value="zrx">ZRX</option>
+                                <option value="wbtc">WBTC</option>
+                            </optgroup>
+                        </select><br />
+                        and supply<br />
+
+                        <input value="8" id="input-text2" type="text" class="form-control__input" oninput="getLiqPrice()">
+                        <select id="blue2" onchange="getLiqPrice()">
+                            <optgroup label="Tokens">
+                                <option value="eth" selected="selected">ETH</option>
+                                <option value="dai">DAI</option>
+                                <option value="usdc">USDC</option>
+                                <option value="bat">BAT</option>
+                                <option value="rep">REP</option>
+                                <option value="zrx">ZRX</option>
+                                <option value="wbtc">WBTC</option>
+                            </optgroup>
+                        </select>
+                        <div id="ColtRatio"></div>
+
+                        <div id="liqPrice"></div>
+
+                    </center>
+                </div>
+                <div id="shadow" class="demo__shadow"></div>
+            </div>
+        </section>
+    </div>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/fetch/2.0.2/fetch.min.js" async></script>
+    <script type="text/javascript" src="./assets/js/gradient.js" async></script>
+    <script type="text/javascript" src="./assets/js/download.js" async></script>
+    <script>
+        window.onload = function() {
+            getLiqPrice();
+        };
+
+        function resizable(el, factor) {
+            var int = Number(factor) || 7.7;
+
+            function resize() {
+                el.style.width = ((el.value.length + 5) * int) + 'px'
+            }
+            var e = 'keyup,keypress,focus,blur,change'.split(',');
+            for (var i in e) el.addEventListener(e[i], resize, false);
+            resize();
+        }
+        resizable(document.getElementById('input-text'), 11);
+
+        function resizable(el, factor) {
+            var int = Number(factor) || 7.7;
+
+            function resize() {
+                el.style.width = ((el.value.length + 5) * int) + 'px'
+            }
+            var e = 'keyup,keypress,focus,blur,change'.split(',');
+            for (var i in e) el.addEventListener(e[i], resize, false);
+            resize();
+        }
+        resizable(document.getElementById('input-text2'), 7);
+
+
+
+        var json = (function() {
+            var json = null;
+            $.ajax({
+                'async': false,
+                'global': false,
+                'url': "https://api.coingecko.com/api/v3/simple/price?ids=ethereum,dai,usd-coin,augur,basic-attention-token,0x,wrapped-bitcoin&vs_currencies=usd",
+                'dataType': "json",
+                'success': function(data) {
+                    json = data;
+                }
+            });
+            return json;
+        })();
+
+        var assets_prices = new Array();
+        assets_prices["eth"] = json.ethereum.usd;
+        assets_prices["dai"] = json.dai.usd;
+        assets_prices["usdc"] = json["usd-coin"].usd;
+        assets_prices["bat"] = json["basic-attention-token"].usd;
+        assets_prices["rep"] = json.augur.usd;
+        assets_prices["zrx"] = json["0x"].usd;
+        assets_prices["wbtc"] = json["wrapped-bitcoin"].usd;
+
+        //This function finds the filling price based on the
+        //drop down selection
+        function getBorrowPrice() {
+            var BorrowPrice = 0;
+            //Get a reference to the form id="cakeform"
+            //Get a reference to the select id="filling"
+            var selectedAssetsb = document.getElementById('blue');
+
+            //set cakeFilling Price equal to value user chose
+            //For example filling_prices["Lemon".value] would be equal to 5
+            BorrowPrice = assets_prices[selectedAssetsb.value];
+
+            //finally we return cakeFillingPrice
+            return BorrowPrice;
+        }
+
+        function getSupplyPrice() {
+            var SupplyPrice = 0;
+            //Get a reference to the form id="cakeform"
+            //Get a reference to the select id="filling"
+            var selectedAssetss = document.getElementById('blue2');
+
+            //set cakeFilling Price equal to value user chose
+            //For example filling_prices["Lemon".value] would be equal to 5
+            SupplyPrice = assets_prices[selectedAssetss.value];
+
+            //finally we return cakeFillingPrice
+            return SupplyPrice;
+        }
+
+        function getSupply() {
+            var supplyq = document.getElementById('input-text2')
+            var sq = 0;
+            if (supplyq.value != "") {
+                sq = parseInt(supplyq.value);
+            }
+            return sq;
+        }
+
+        function getBorrow() {
+            var borrowq = document.getElementById('input-text')
+            var bq = 0;
+            if (borrowq.value != "") {
+                bq = parseInt(borrowq.value);
+            }
+            return bq;
+        }
+
+        function getColtFactor() {
+            var cf = 0;
+            var selectedAssets_s = document.getElementById('blue2').value;
+            if (selectedAssets_s === "eth" || "usdc" || "dai") {
+                cf = 0.75;
+            } else if (selectedAssets_s === "bat" || "zrx") {
+                cf = 0.6;
+            } else if (selectedAssets_s === "rep") {
+                cf = 0.5;
+            } else if (selectedAssets_s === "wbtc") {
+                cf = 0;
+            }
+            return cf;
+        }
+
+        function getLiqPrice() {
+            //Here we get the total price by calling our function
+            //Each function returns a number so by calling them we add the values they return together
+            var selectedAssets_s = document.getElementById('blue2').value;
+
+            var collateral_ratio = ((getSupply() * getSupplyPrice()) * 1) / (getBorrowPrice() * getBorrow());
+            var liq_ratio = 1 / getColtFactor();
+            var liq_value = ((getSupply() * getSupplyPrice()) * liq_ratio) / collateral_ratio;
+            var liqprice = liq_value / getSupply()
+            //display the result
+            if (liqprice < getSupplyPrice()) {
+                document.getElementById('ColtRatio').innerHTML =
+                    "Your current collateral ratio is " + "<font color=\"green\"><b>" + (collateral_ratio * 100).toFixed(2) + "% </font></b>";
+                document.getElementById('liqPrice').innerHTML =
+                    "Your loan will be liquidated if " + "<b>" + selectedAssets_s.toUpperCase() + "</b> falls below <font color=\"red\"><b>$" + +liqprice.toFixed(3) + "</b></font>" + " (Collateral value < $" + +liq_value.toFixed(0) + ")";
+            } else {
+                document.getElementById('ColtRatio').innerHTML =
+                    "Your loan is under collateralized.";
+                document.getElementById('liqPrice').innerHTML=  "Your current collateral ratio is " + "<font color=\"red\"><b>" + (collateral_ratio * 100).toFixed(2) + "%</b></font";
+            }
+
+        }
+    </script>
+</body></html>
